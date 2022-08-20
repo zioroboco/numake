@@ -1,7 +1,8 @@
 use std::env;
 use std::error::Error;
+use std::io;
 use std::path::{Path, PathBuf};
-use std::process::{exit, Command};
+use std::process::{exit, Command, Output};
 
 const MAKEFILE_NAME: &str = "make.nu";
 
@@ -21,15 +22,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err(From::from("no command given"));
     }
 
-    let result = Command::new("nu")
-        .args(["--env-config", makefile.to_str().unwrap()])
-        .args(["-c", &args[1..].join(" ")])
-        .output()
-        .unwrap();
+    let result = run(&makefile, &args[1..].join(" "))?;
 
-    println!("{}", String::from_utf8(result.stdout)?);
+    print!("{}", String::from_utf8(result.stdout)?);
 
     Ok(())
+}
+
+fn run(makefile: &Path, cmd: &str) -> Result<Output, io::Error> {
+    Command::new("nu")
+        .args(["--env-config", makefile.to_str().unwrap()])
+        .args(["-c", cmd])
+        .output()
 }
 
 fn find_makefile(starting_dir: &PathBuf) -> Option<PathBuf> {
