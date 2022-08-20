@@ -22,6 +22,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err(From::from("no command given"));
     }
 
+    if args[1] == "--list" {
+        let result = list(&makefile)?;
+        println!("Commands:\n{}", String::from_utf8(result.stdout)?);
+        exit(0)
+    }
+
     let result = run(&makefile, &args[1..].join(" "))?;
 
     if !result.status.success() {
@@ -39,6 +45,13 @@ fn run(makefile: &Path, cmd: &str) -> Result<Output, io::Error> {
         .args(["--env-config", makefile.to_str().unwrap()])
         .args(["-c", cmd])
         .output()
+}
+
+fn list(makefile: &Path) -> Result<Output, io::Error> {
+    run(
+        makefile,
+        "help commands | where is_custom == true | format '    {name} # {usage}' | to text",
+    )
 }
 
 fn find_makefile(starting_dir: &PathBuf) -> Option<PathBuf> {
