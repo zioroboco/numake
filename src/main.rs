@@ -24,6 +24,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let result = run(&makefile, &args[1..].join(" "))?;
 
+    if !result.status.success() {
+        eprint!("{}", String::from_utf8(result.stderr)?);
+        exit(result.status.code().unwrap_or(1));
+    }
+
     print!("{}", String::from_utf8(result.stdout)?);
 
     Ok(())
