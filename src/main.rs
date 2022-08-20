@@ -47,10 +47,20 @@ fn run(makefile: &Path, cmd: &str) -> Result<Output, io::Error> {
         .output()
 }
 
+static GREY: &str = "\x1b[90m";
+static RESET: &str = "\x1b[0m";
+
 fn list(makefile: &Path) -> Result<Output, io::Error> {
     run(
         makefile,
-        "help commands | where is_custom == true | format '    {name} # {usage}' | to text",
+        &format!(
+            "help commands
+                | where is_custom == true
+                | format '    {{name}} {grey}{{usage}}{reset}'
+                | to text",
+            grey = GREY,
+            reset = RESET
+        ),
     )
 }
 

@@ -7,3 +7,7 @@ def bee [] {
 def blep [] {
     echo 😛
 }
+
+def unhelpful [] {
+    echo 🤷
+}
