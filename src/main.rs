@@ -1,8 +1,11 @@
 use std::env;
 use std::error::Error;
-use std::io;
+use std::fmt::Write as FmtWrite;
+use std::fs::File;
+use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
-use std::process::{exit, Command, Output};
+use std::process::{exit, Command, ExitStatus, Output};
+use tempdir::TempDir;
 
 const MAKEFILE_NAME: &str = "make.nu";
 
@@ -25,8 +28,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     if args[1] == "--list" {
         let result = list(&makefile)?;
         println!("Commands:\n{}", String::from_utf8(result.stdout)?);
-        print!("Run '<command> --help' for more information.");
+        println!("Run '<command> --help' for more information.");
         exit(0)
+    }
+
+    if args[1] == "--interactive" {
+        let status = interactive(&makefile)?;
+        exit(status.code().unwrap_or(1))
     }
 
     let result = run(&makefile, &args[1..].join(" "))?;
@@ -36,7 +44,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         exit(result.status.code().unwrap_or(1));
     }
 
-    print!("{}", String::from_utf8(result.stdout)?);
+    println!("{}", String::from_utf8(result.stdout)?);
 
     Ok(())
 }
@@ -48,8 +56,59 @@ fn run(makefile: &Path, cmd: &str) -> Result<Output, io::Error> {
         .output()
 }
 
+static BLUE: &str = "\x1b[34m";
+static GREEN: &str = "\x1b[32m";
 static GREY: &str = "\x1b[90m";
 static RESET: &str = "\x1b[0m";
+
+fn interactive(makefile: &Path) -> Result<ExitStatus, io::Error> {
+    let temp_dir = TempDir::new("numake")?;
+    let temp_env_path = temp_dir.path().join("env.nu");
+
+    let mut temp_env_data = String::new();
+
+    let makefile_dir = makefile.parent().unwrap();
+    let makefile_dir_basename = makefile_dir.file_name().unwrap();
+
+    let _ = write!(
+        temp_env_data,
+        r#"
+            let-env PROMPT_COMMAND_RIGHT = {{""}}
+            let-env PROMPT_COMMAND = {{
+                [
+                    "{green}(numake){reset} {blue}",
+                    (
+                        ["{makefile_dir_basename}", ($env.PWD | path relative-to {makefile_dir})]
+                        | where {{ |it| $it != "" }}
+                        | str collect "/"
+                    ),
+                    "{reset} ",
+                ] | str collect
+            }}
+        "#,
+        makefile_dir_basename = makefile_dir_basename.to_str().unwrap(),
+        makefile_dir = makefile_dir.to_str().unwrap(),
+        blue = BLUE,
+        green = GREEN,
+        reset = RESET,
+    );
+
+    let mut makefile_content = File::open(makefile)?;
+    makefile_content.read_to_string(&mut temp_env_data)?;
+
+    let mut temp_file = File::create(&temp_env_path)?;
+    write!(temp_file, "{}", temp_env_data)?;
+
+    let status = Command::new("nu")
+        .args(["--env-config", temp_env_path.to_str().unwrap()])
+        .spawn()?
+        .wait();
+
+    drop(temp_file);
+    temp_dir.close()?;
+
+    status
+}
 
 fn list(makefile: &Path) -> Result<Output, io::Error> {
     run(
