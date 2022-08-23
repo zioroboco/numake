@@ -55,10 +55,22 @@ fn list(makefile: &Path) -> Result<Output, io::Error> {
     run(
         makefile,
         &format!(
-            "help commands
+            r#"
+                help commands
                 | where is_custom == true
-                | format '    {{name}} {grey}{{usage}}{reset}'
-                | to text",
+                | each {{
+                    |row| {{
+                        name: $row.name,
+                        usage: (
+                            if $row.usage != "" {{
+                                [" # ", ($row.usage | str replace "\n.*" "")] | str collect
+                            }}
+                        )
+                    }}
+                }}
+                | format "    {{name}}{grey}{{usage}}{reset}"
+                | to text
+            "#,
             grey = GREY,
             reset = RESET
         ),
