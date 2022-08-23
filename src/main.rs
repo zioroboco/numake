@@ -13,19 +13,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     let makefile = match find_makefile(&cwd) {
         Some(path) => path,
         None => {
-            eprintln!("could not find {} file", &MAKEFILE_NAME);
+            eprintln!("Could not find {} file", &MAKEFILE_NAME);
             exit(1);
         }
     };
 
     if args.len() < 2 {
-        return Err(From::from("no command given"));
+        return Err(From::from("Usage: numake <command>"));
     }
 
     if args[1] == "--list" {
         let result = list(&makefile)?;
         println!("Commands:\n{}", String::from_utf8(result.stdout)?);
-        println!("Run '<command> --help' for more information.");
+        print!("Run '<command> --help' for more information.");
         exit(0)
     }
 
