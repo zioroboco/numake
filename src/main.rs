@@ -27,6 +27,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if args[1] == "--list" {
         let result = list(&makefile)?;
+        if !result.stderr.is_empty() {
+            eprintln!("{}", String::from_utf8(result.stderr)?);
+            exit(1);
+        }
         println!("Commands:\n{}", String::from_utf8(result.stdout)?);
         println!("Run '<command> --help' for more information.");
         exit(0)
