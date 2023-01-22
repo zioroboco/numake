@@ -21,11 +21,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     };
 
-    if args.len() < 2 {
-        return Err(From::from("Usage: numake <command>"));
-    }
-
-    if args[1] == "--list" {
+    if args.len() < 2 || args[1] == "--list" {
         let result = list(&makefile)?;
         if !result.stderr.is_empty() {
             eprintln!("{}", String::from_utf8(result.stderr)?);
@@ -120,7 +116,7 @@ fn list(makefile: &Path) -> Result<Output, io::Error> {
         &format!(
             r#"
                 help commands
-                | where is_custom == true
+                | where command_type == custom
                 | each {{
                     |row| {{
                         name: $row.name,
