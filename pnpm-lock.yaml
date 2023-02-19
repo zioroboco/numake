@@ -1,14 +1,21 @@
 lockfileVersion: 5.4
 
-specifiers:
-  '@types/node': '*'
-  dprint: ^0.34.4
-  typescript: ^4.9.5
+importers:
 
-devDependencies:
-  '@types/node': 18.14.0
-  dprint: 0.34.5
-  typescript: 4.9.5
+  .:
+    specifiers:
+      '@types/node': '*'
+      dprint: ^0.34.4
+      numake: link:./npm
+      typescript: ^4.9.5
+    devDependencies:
+      '@types/node': 18.14.0
+      dprint: 0.34.5
+      numake: link:npm
+      typescript: 4.9.5
+
+  npm:
+    specifiers: {}
 
 packages:
 

@@ -2,10 +2,5 @@
   "name": "numake",
   "version": "0.75.0-dev",
   "bin": "numake.js",
-  "type": "module",
-  "devDependencies": {
-    "@types/node": "*",
-    "dprint": "^0.34.4",
-    "typescript": "^4.9.5"
-  }
+  "type": "module"
 }

@@ -1,0 +1,10 @@
+{
+  "packageManager": "pnpm@7.27.1",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "*",
+    "dprint": "^0.34.4",
+    "numake": "link:./npm",
+    "typescript": "^4.9.5"
+  }
+}
