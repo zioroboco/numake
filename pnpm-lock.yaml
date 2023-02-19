@@ -6,22 +6,20 @@ importers:
     specifiers:
       '@types/node': '*'
       dprint: ^0.34.4
-      numake: link:./npm
       typescript: ^4.9.5
     devDependencies:
       '@types/node': 18.14.0
       dprint: 0.34.5
-      numake: link:npm
       typescript: 4.9.5
 
-  npm:
+  package:
     specifiers: {}
 
   test:
     specifiers:
-      numake: file:../npm
+      numake: file:../package
     devDependencies:
-      numake: file:npm
+      numake: file:package
 
 packages:
 
@@ -102,8 +100,8 @@ packages:
       fd-slicer: 1.1.0
     dev: true
 
-  file:npm:
-    resolution: {directory: npm, type: directory}
+  file:package:
+    resolution: {directory: package, type: directory}
     name: numake
     version: 0.75.0-dev
     hasBin: true

@@ -9,7 +9,6 @@
   "devDependencies": {
     "@types/node": "*",
     "dprint": "^0.34.4",
-    "numake": "link:./npm",
     "typescript": "^4.9.5"
   }
 }

@@ -4,6 +4,6 @@
     "test": "numake"
   },
   "devDependencies": {
-    "numake": "file:../npm"
+    "numake": "file:../package"
   }
 }
