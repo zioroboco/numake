@@ -1,6 +1,11 @@
 {
   "packageManager": "pnpm@7.27.1",
   "private": true,
+  "scripts": {
+    "docker:build": "docker build --tag name:numake .",
+    "docker:run": "docker run --rm name:numake",
+    "test": "pnpm run docker:build && pnpm run docker:run"
+  },
   "devDependencies": {
     "@types/node": "*",
     "dprint": "^0.34.4",

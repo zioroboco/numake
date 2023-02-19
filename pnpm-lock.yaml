@@ -17,6 +17,12 @@ importers:
   npm:
     specifiers: {}
 
+  test:
+    specifiers:
+      numake: file:../npm
+    devDependencies:
+      numake: file:npm
+
 packages:
 
   /@types/node/18.14.0:
@@ -94,4 +100,11 @@ packages:
     dependencies:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
+    dev: true
+
+  file:npm:
+    resolution: {directory: npm, type: directory}
+    name: numake
+    version: 0.75.0-dev
+    hasBin: true
     dev: true
