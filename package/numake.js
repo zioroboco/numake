@@ -70,8 +70,6 @@ async function main() {
   const nushell_release_filename = `${nushell_release_name}.tar.gz`
   info(`nushell release name: ${nushell_release_name}`)
 
-  const nu_bin = path.join(bin_dir, "nu")
-
   if (fs.existsSync(path.join(store_dir, nushell_release_filename))) {
     info(`nushell release exists in store, skipping download`)
   } else {
@@ -87,10 +85,15 @@ async function main() {
 
     info(`installing nushell...`)
     child_process.execSync(`tar -xzf ${nushell_release_filename}`, { cwd: store_dir })
-    child_process.execSync(`ln -s ${path.join(store_dir, nushell_release_name, "nu")} ${nu_bin}`)
   }
 
-  if (DEBUG) assert.equal(nushell_version, child_process.execSync(`${nu_bin} --version`).toString().trim())
+  const nu_bin = path.join(bin_dir, "nu")
+  child_process.execSync(`ln -sf ${path.join(store_dir, nushell_release_name, "nu")} ${nu_bin}`)
+
+  if (DEBUG) {
+    const reported_nushell_version = child_process.execSync(`${nu_bin} --version`).toString().trim()
+    assert.equal(reported_nushell_version, nushell_version, "reported nushell version did not match expected version")
+  }
 
   const project_path = findup_or_else(MAKEFILE_NAME)
   const makefile_path = path.join(project_path, MAKEFILE_NAME)
