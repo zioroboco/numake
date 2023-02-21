@@ -87,7 +87,12 @@ async function main() {
   }
 
   const nu_bin = path.join(numake_bin_dir, "nu")
-  if (DEBUG) assert.equal(nushell_version, String(child_process.execSync(`${nu_bin} --version`)).trim())
+  if (DEBUG) assert.equal(nushell_version, child_process.execSync(`${nu_bin} --version`).toString().trim())
+}
+
+function is_musl() {
+  const stderr = child_process.spawnSync("ldd", ["--version"]).stderr.toString()
+  return stderr.indexOf("musl") > -1
 }
 
 /**
@@ -101,7 +106,7 @@ function get_platform(process) {
         ? "aarch64-apple-darwin"
         : "x86_64-apple-darwin"
     case "linux":
-      if (process.env.MUSL) {
+      if (is_musl()) {
         return "x86_64-unknown-linux-musl"
       }
       return process.arch === "arm64"
