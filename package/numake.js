@@ -4,11 +4,23 @@
 import { createRequire } from "node:module"
 const require = createRequire(import.meta.url)
 
+import assert from "node:assert"
 import child_process from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
+let DEBUG = Boolean(process.env.NUMAKE_DEBUG)
+let LOGLEVEL = "warn"
+
+if (DEBUG) {
+  LOGLEVEL = "debug"
+} else if (process.env.NUMAKE_LOGLEVEL) {
+  LOGLEVEL = process.env.NUMAKE_LOGLEVEL
+}
+
+/** @type {typeof console.debug} */
+let debug = () => { }
 /** @type {typeof console.info} */
 let info = () => { }
 /** @type {typeof console.warn} */
@@ -16,7 +28,9 @@ let warn = () => { }
 /** @type {typeof console.error} */
 let error = () => { }
 
-switch (process.env.NUMAKE_LOGLEVEL ?? "warn") {
+switch (LOGLEVEL) {
+  case "debug":
+    debug = console.debug
   case "info":
     info = console.info
   case "warn":
@@ -71,6 +85,9 @@ async function main() {
     info(`linking nushell...`)
     child_process.exec(`ln -s ${path.relative(numake_bin_dir, path.join(numake_store_dir, nushell_release_name, "nu"))} nu`, { cwd: numake_bin_dir })
   }
+
+  const nu_bin = path.join(numake_bin_dir, "nu")
+  if (DEBUG) assert.equal(nushell_version, String(child_process.execSync(`${nu_bin} --version`)).trim())
 }
 
 /**
