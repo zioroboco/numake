@@ -56,15 +56,23 @@ async function main() {
   info(`platform: ${platform}`)
 
   const package_dir = fileURLToPath(new URL(".", import.meta.url))
-  const numake_store_dir = path.join(package_dir, ".store")
-  await fs.promises.mkdir(numake_store_dir, { recursive: true })
-  info(`store directory: ${path.relative(process.cwd(), numake_store_dir)}`)
+  info(`package directory: ${path.relative(process.cwd(), package_dir)}`)
+
+  const store_dir = path.join(package_dir, ".store")
+  await fs.promises.mkdir(store_dir, { recursive: true })
+  info(`store directory: ${path.relative(process.cwd(), store_dir)}`)
+
+  const bin_dir = path.join(package_dir, ".bin")
+  await fs.promises.mkdir(bin_dir, { recursive: true })
+  info(`bin directory: ${path.relative(process.cwd(), bin_dir)}`)
 
   const nushell_release_name = `nu-${nushell_version}-${platform}`
   const nushell_release_filename = `${nushell_release_name}.tar.gz`
   info(`nushell release name: ${nushell_release_name}`)
 
-  if (fs.existsSync(path.join(numake_store_dir, nushell_release_filename))) {
+  const nu_bin = path.join(bin_dir, "nu")
+
+  if (fs.existsSync(path.join(store_dir, nushell_release_filename))) {
     info(`nushell release exists in store, skipping download`)
   } else {
     info(`nushell release does not exist in store, downloading...`)
@@ -75,14 +83,14 @@ async function main() {
     info(`downloading nushell...`)
     await fetch(nushell_release_url)
       .then(response => response.arrayBuffer())
-      .then(array_buffer => fs.promises.writeFile(path.join(numake_store_dir, nushell_release_filename), Buffer.from(array_buffer)))
+      .then(array_buffer => fs.promises.writeFile(path.join(store_dir, nushell_release_filename), Buffer.from(array_buffer)))
 
     info(`installing nushell...`)
-    child_process.execSync(`tar -xzf ${nushell_release_filename}`, { cwd: numake_store_dir })
-    child_process.execSync(`ln -s ${path.join(numake_store_dir, nushell_release_name, "nu")} ${path.resolve(package_dir, "../.bin")}`)
+    child_process.execSync(`tar -xzf ${nushell_release_filename}`, { cwd: store_dir })
+    child_process.execSync(`ln -s ${path.join(store_dir, nushell_release_name, "nu")} ${nu_bin}`)
   }
 
-  if (DEBUG) assert.equal(nushell_version, child_process.execSync(`nu --version`).toString().trim())
+  if (DEBUG) assert.equal(nushell_version, child_process.execSync(`${nu_bin} --version`).toString().trim())
 
   const project_path = findup_or_else(MAKEFILE_NAME)
   const makefile_path = path.join(project_path, MAKEFILE_NAME)
@@ -93,7 +101,7 @@ async function main() {
   const cmd = [first, ...rest].join(" ")
   info(`running command: ${cmd}`)
 
-  child_process.execSync(`nu --env-config=${makefile_path} -c "${cmd}"`, { cwd: project_path, stdio: "inherit" })
+  child_process.execSync(`${nu_bin} --env-config=${makefile_path} -c "${cmd}"`, { cwd: project_path, stdio: "inherit" })
 }
 
 /**
@@ -146,6 +154,6 @@ main().then(() => {
   info("done")
   process.exit(0)
 }).catch((err) => {
-  error(err)
+  if (DEBUG) error(err)
   process.exit(1)
 })

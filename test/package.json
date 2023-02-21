@@ -1,6 +1,8 @@
 {
   "private": true,
   "scripts": {
+    "test": "numake test success",
+    "test-fail": "numake test fail",
     "numake": "numake"
   },
   "devDependencies": {

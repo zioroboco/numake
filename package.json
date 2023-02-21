@@ -2,11 +2,12 @@
   "packageManager": "pnpm@7.27.1",
   "private": true,
   "scripts": {
-    "test": "cd test && pnpm numake",
+    "test": "cd test && pnpm -s test",
+    "test-fail": "cd test && pnpm -s test-fail",
     "test-clean": "pnpm install --silent --force --filter ./test && pnpm test",
     "docker:build": "docker build --tag name:numake .",
     "docker:run": "docker run --rm name:numake",
-    "docker:test": "pnpm run docker:build && pnpm run docker:run"
+    "docker:test": "pnpm -s run docker:build && pnpm -s run docker:run"
   },
   "devDependencies": {
     "@types/node": "*",
