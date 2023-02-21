@@ -1,3 +1,5 @@
+**/.bin
 **/.dockerignore
+**/.store
 **/Dockerfile*
 **/node_modules
