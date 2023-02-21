@@ -22,13 +22,13 @@ async function main() {
   info(`platform: ${platform}`)
 
   const numake_package_dir = fileURLToPath(new URL(".", import.meta.url))
-  const numake_store_dir = path.join(numake_package_dir, "store")
+  const numake_store_dir = path.join(numake_package_dir, ".store")
   await fs.promises.mkdir(numake_store_dir, { recursive: true })
-  info(`numake store directory: ${numake_store_dir}`)
+  info(`store directory: ${numake_store_dir}`)
 
-  const numake_bin_dir = path.join(numake_package_dir, "bin")
+  const numake_bin_dir = path.join(numake_package_dir, ".bin")
   await fs.promises.mkdir(numake_bin_dir, { recursive: true })
-  info(`numake bin directory: ${numake_bin_dir}`)
+  info(`bin directory: ${numake_bin_dir}`)
 
   const nushell_release_name = `nu-${nushell_version}-${platform}`
   const nushell_release_filename = `${nushell_release_name}.tar.gz`
