@@ -53,14 +53,10 @@ async function main() {
   const platform = get_platform(process)
   info(`platform: ${platform}`)
 
-  const numake_package_dir = path.relative(process.cwd(), fileURLToPath(new URL(".", import.meta.url)))
-  const numake_store_dir = path.join(numake_package_dir, ".store")
+  const package_dir = fileURLToPath(new URL(".", import.meta.url))
+  const numake_store_dir = path.join(package_dir, ".store")
   await fs.promises.mkdir(numake_store_dir, { recursive: true })
-  info(`store directory: ${numake_store_dir}`)
-
-  const numake_bin_dir = path.join(numake_package_dir, ".bin")
-  await fs.promises.mkdir(numake_bin_dir, { recursive: true })
-  info(`bin directory: ${numake_bin_dir}`)
+  info(`store directory: ${path.relative(process.cwd(), numake_store_dir)}`)
 
   const nushell_release_name = `nu-${nushell_version}-${platform}`
   const nushell_release_filename = `${nushell_release_name}.tar.gz`
@@ -79,15 +75,12 @@ async function main() {
       .then(response => response.arrayBuffer())
       .then(array_buffer => fs.promises.writeFile(path.join(numake_store_dir, nushell_release_filename), Buffer.from(array_buffer)))
 
-    info(`extracting nushell...`)
-    child_process.exec(`tar -xzf ${nushell_release_filename}`, { cwd: numake_store_dir })
-
-    info(`linking nushell...`)
-    child_process.exec(`ln -s ${path.relative(numake_bin_dir, path.join(numake_store_dir, nushell_release_name, "nu"))} nu`, { cwd: numake_bin_dir })
+    info(`installing nushell...`)
+    child_process.execSync(`tar -xzf ${nushell_release_filename}`, { cwd: numake_store_dir })
+    child_process.execSync(`ln -s ${path.join(numake_store_dir, nushell_release_name, "nu")} ${path.resolve(package_dir, "../.bin")}`)
   }
 
-  const nu_bin = path.join(numake_bin_dir, "nu")
-  if (DEBUG) assert.equal(nushell_version, child_process.execSync(`${nu_bin} --version`).toString().trim())
+  if (DEBUG) assert.equal(nushell_version, child_process.execSync(`nu --version`).toString().trim())
 }
 
 function is_musl() {
