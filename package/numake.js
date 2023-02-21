@@ -10,7 +10,9 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
-let DEBUG = Boolean(process.env.NUMAKE_DEBUG)
+const MAKEFILE_NAME = "make.nu"
+const DEBUG = Boolean(process.env.NUMAKE_DEBUG)
+
 let LOGLEVEL = "warn"
 
 if (DEBUG) {
@@ -81,6 +83,29 @@ async function main() {
   }
 
   if (DEBUG) assert.equal(nushell_version, child_process.execSync(`nu --version`).toString().trim())
+
+  const project_path = findup_or_else(MAKEFILE_NAME)
+  const makefile_path = path.join(project_path, MAKEFILE_NAME)
+  info(`located makefile: ${makefile_path}`)
+}
+
+/**
+ * @param target {string}
+ * @returns {string}
+ */
+function findup_or_else(target, cwd = process.cwd()) {
+  if (cwd === "/") {
+    throw new Error(`could not locate file ${target} from ${process.cwd()}`)
+  }
+
+  const contains_target = fs.readdirSync(cwd, { withFileTypes: true })
+    .some(dirent => dirent.isFile() && dirent.name === target)
+
+  if (contains_target) {
+    return path.relative(process.cwd(), cwd)
+  } else {
+    return findup_or_else(target, path.resolve(cwd, ".."))
+  }
 }
 
 function is_musl() {
