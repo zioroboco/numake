@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 // @ts-check
 
+import { createRequire } from "node:module"
+const require = createRequire(import.meta.url)
+
 import child_process from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
@@ -28,8 +31,8 @@ async function main() {
   const node_version = process.version.replace(/^v/, "")
   info(`node version: ${node_version}`)
 
-  const { default: package_meta } = await import("./package.json", { assert: { type: "json" } })
-  const [nushell_version, numake_release] = package_meta.version.split("-")
+  const package_meta = JSON.parse(await fs.promises.readFile(require.resolve("./package.json"), "utf-8"))
+  const [nushell_version, numake_release] = package_meta["version"].split("-")
   info(`nushell version: ${nushell_version}`)
   info(`numake release: ${numake_release}`)
 
