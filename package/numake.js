@@ -39,7 +39,7 @@ async function main() {
   const platform = get_platform(process)
   info(`platform: ${platform}`)
 
-  const numake_package_dir = fileURLToPath(new URL(".", import.meta.url))
+  const numake_package_dir = path.relative(process.cwd(), fileURLToPath(new URL(".", import.meta.url)))
   const numake_store_dir = path.join(numake_package_dir, ".store")
   await fs.promises.mkdir(numake_store_dir, { recursive: true })
   info(`store directory: ${numake_store_dir}`)
