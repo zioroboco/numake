@@ -6,18 +6,33 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
-const info = console.info
-info(`--- numake ---`)
+/** @type {typeof console.info} */
+let info = () => { }
+/** @type {typeof console.warn} */
+let warn = () => { }
+/** @type {typeof console.error} */
+let error = () => { }
 
-const node_version = process.version.replace(/^v/, "")
-info(`node version: ${node_version}`)
-
-import package_meta from "./package.json" assert { type: "json" }
-const [nushell_version, numake_release] = package_meta.version.split("-")
-info(`nushell version: ${nushell_version}`)
-info(`numake release: ${numake_release}`)
+switch (process.env.NUMAKE_LOGLEVEL ?? "warn") {
+  case "info":
+    info = console.info
+  case "warn":
+    warn = console.warn
+  case "error":
+    error = console.error
+}
 
 async function main() {
+  info(`--- numake ---`)
+
+  const node_version = process.version.replace(/^v/, "")
+  info(`node version: ${node_version}`)
+
+  const { default: package_meta } = await import("./package.json", { assert: { type: "json" } })
+  const [nushell_version, numake_release] = package_meta.version.split("-")
+  info(`nushell version: ${nushell_version}`)
+  info(`numake release: ${numake_release}`)
+
   const platform = get_platform(process)
   info(`platform: ${platform}`)
 
@@ -78,9 +93,9 @@ function get_platform(process) {
 }
 
 main().then(() => {
-  console.log("done")
+  info("done")
   process.exit(0)
 }).catch((err) => {
-  console.error(err)
+  error(err)
   process.exit(1)
 })
