@@ -86,7 +86,14 @@ async function main() {
 
   const project_path = findup_or_else(MAKEFILE_NAME)
   const makefile_path = path.join(project_path, MAKEFILE_NAME)
-  info(`located makefile: ${makefile_path}`)
+  info(`located makefile: ${path.relative(process.cwd(), makefile_path)}`)
+
+  const [_node, _numake, first, ...rest] = process.argv
+
+  const cmd = [first, ...rest].join(" ")
+  info(`running command: ${cmd}`)
+
+  child_process.execSync(`nu --env-config=${makefile_path} -c "${cmd}"`, { cwd: project_path, stdio: "inherit" })
 }
 
 /**
@@ -102,7 +109,7 @@ function findup_or_else(target, cwd = process.cwd()) {
     .some(dirent => dirent.isFile() && dirent.name === target)
 
   if (contains_target) {
-    return path.relative(process.cwd(), cwd)
+    return cwd
   } else {
     return findup_or_else(target, path.resolve(cwd, ".."))
   }
