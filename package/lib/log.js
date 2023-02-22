@@ -4,11 +4,9 @@ const { NUMAKE_DEBUG } = process.env
 
 export function make_loggers(loglevel = "warn") {
 	if (NUMAKE_DEBUG) {
-		loglevel = "debug"
+		loglevel = "info"
 	}
 
-	/** @type {typeof console.debug} */
-	let debug = () => { }
 	/** @type {typeof console.info} */
 	let info = () => { }
 	/** @type {typeof console.warn} */
@@ -17,10 +15,8 @@ export function make_loggers(loglevel = "warn") {
 	let error = () => { }
 
 	switch (loglevel) {
-		case "debug":
-			debug = console.debug
 		case "info":
-			info = console.info
+			info = console.debug
 		case "warn":
 			warn = console.warn
 		case "error":
@@ -28,7 +24,6 @@ export function make_loggers(loglevel = "warn") {
 	}
 
 	return {
-		debug,
 		info,
 		warn,
 		error,
