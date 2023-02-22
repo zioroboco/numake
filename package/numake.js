@@ -18,7 +18,7 @@ const MAKEFILE_NAME = "make.nu"
 async function main() {
   info(`--- numake ---`)
 
-  const nu_bin = await install(log)
+  const nushell = await install(log)
 
   const project_path = findup_or_else(MAKEFILE_NAME)
   const makefile_path = path.join(project_path, MAKEFILE_NAME)
@@ -28,7 +28,7 @@ async function main() {
   const cmd = [first, ...rest].join(" ")
   info(`running command: ${cmd}`)
 
-  child_process.execSync(`${nu_bin} --env-config=${makefile_path} -c "${cmd}"`, { cwd: project_path, stdio: "inherit" })
+  child_process.execSync(`${nushell.bin} --env-config=${makefile_path} -c "${cmd}"`, { cwd: project_path, stdio: "inherit" })
 }
 
 /**

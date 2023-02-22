@@ -1,5 +1,4 @@
-**/.bin
+**/.cache
 **/.dockerignore
-**/.store
 **/Dockerfile*
 **/node_modules

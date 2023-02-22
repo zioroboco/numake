@@ -1,3 +1,2 @@
-.bin/
-.store/
+.cache/
 node_modules/

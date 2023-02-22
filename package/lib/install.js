@@ -1,6 +1,9 @@
 // @ts-check
 
-const { NUMAKE_DEBUG } = process.env
+const {
+  NUMAKE_DEBUG,
+  XDG_DATA_HOME,
+} = process.env
 
 import assert from "node:assert"
 import child_process from "node:child_process"
@@ -10,65 +13,57 @@ import url from "node:url"
 
 /**
  * @param loggers {ReturnType<typeof import("./log.js").make_loggers>}
- * @returns {Promise<string>}
+ * @returns {Promise<{ bin: string, version: string }>}
  */
 export async function install({ info }) {
-  const node_version = process.version.replace(/^v/, "")
-  info(`node version: ${node_version}`)
-
   const package_dir = url.fileURLToPath(new URL("..", import.meta.url))
-  info(`package directory: ${path.relative(process.cwd(), package_dir)}`)
-
   const package_meta = JSON.parse(await fs.promises.readFile(path.join(package_dir, "package.json"), "utf8"))
-  const [nushell_version, numake_release] = package_meta["version"].split("-")
-  info(`nushell version: ${nushell_version}`)
+  const [nu_version, numake_release] = package_meta["version"].split("-")
+  info(`nushell version: ${nu_version}`)
   info(`numake release: ${numake_release}`)
 
-  const platform = get_platform(process)
-  info(`platform: ${platform}`)
+  const data_dir = XDG_DATA_HOME ? path.join(XDG_DATA_HOME, "numake") : path.join(package_dir, ".cache")
+  info(`data directory: ${data_dir}`)
 
-  const store_dir = path.join(package_dir, ".store")
-  await fs.promises.mkdir(store_dir, { recursive: true })
-  info(`store directory: ${path.relative(process.cwd(), store_dir)}`)
-
-  const bin_dir = path.join(package_dir, ".bin")
-  await fs.promises.mkdir(bin_dir, { recursive: true })
-  info(`bin directory: ${path.relative(process.cwd(), bin_dir)}`)
-
-  const nushell_release = `nu-${nushell_version}-${platform}`
-  const nushell_release_filename = `${nushell_release}.tar.gz`
-  info(`nushell release: ${nushell_release}`)
-
-  if (fs.existsSync(path.join(store_dir, nushell_release_filename))) {
-    info(`found nushell release archive, skipping download`)
-  } else {
-    info(`nushell release does not exist in store, downloading...`)
-    const nushell_release_url = `https://github.com/nushell/nushell/releases/download/${nushell_version}/${nushell_release_filename}`
-
-    info(`url: ${nushell_release_url}`)
-
-    info(`downloading nushell...`)
-    await fetch(nushell_release_url)
-      .then(response => response.arrayBuffer())
-      .then(array_buffer => fs.promises.writeFile(path.join(store_dir, nushell_release_filename), Buffer.from(array_buffer)))
-  }
-
-  if (fs.existsSync(path.join(store_dir, nushell_release, "nu"))) {
-    info(`found nushell release binary, skipping extraction`)
-  } else {
-    info(`extracting nushell...`)
-    child_process.execSync(`tar -xzf ${nushell_release_filename}`, { cwd: store_dir })
-  }
-
+  const bin_dir = path.join(data_dir, "versions", nu_version, "bin")
   const nu_bin = path.join(bin_dir, "nu")
-  child_process.execSync(`ln -sf ${path.join(store_dir, nushell_release, "nu")} ${nu_bin}`)
+
+  if (fs.existsSync(nu_bin)) {
+    info(`found matching nushell version, skipping install`)
+  } else {
+    const platform = get_platform(process)
+    info(`platform: ${platform}`)
+
+    const store_dir = path.join(data_dir, "store")
+    await fs.promises.mkdir(store_dir, { recursive: true })
+
+    const nu_release = `nu-${nu_version}-${platform}`
+    const nu_release_filename = `${nu_release}.tar.gz`
+    info(`nushell release: ${nu_release}`)
+
+    if (fs.existsSync(path.join(store_dir, nu_release_filename))) {
+      info(`found release in store, skipping download`)
+    } else {
+      info(`release does not exist in store, downloading...`)
+      await fetch(`https://github.com/nushell/nushell/releases/download/${nu_version}/${nu_release_filename}`)
+        .then(response => response.arrayBuffer())
+        .then(array_buffer => fs.promises.writeFile(path.join(store_dir, nu_release_filename), Buffer.from(array_buffer)))
+    }
+
+    info(`extracting nushell binary...`)
+    await fs.promises.mkdir(bin_dir, { recursive: true })
+    child_process.execSync(`tar -xzf ${nu_release_filename} -C ${bin_dir} --strip-components=1 ${nu_release}/nu`, { cwd: store_dir })
+  }
 
   if (NUMAKE_DEBUG) {
     const reported_nushell_version = child_process.execSync(`${nu_bin} --version`).toString().trim()
-    assert.equal(reported_nushell_version, nushell_version, "reported nushell version did not match expected version")
+    assert.equal(reported_nushell_version, nu_version, "reported nushell version did not match expected version")
   }
 
-  return nu_bin
+  return {
+    bin: nu_bin,
+    version: nu_version,
+  }
 }
 
 /**
