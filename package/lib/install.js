@@ -13,14 +13,14 @@ import url from "node:url"
 
 /**
  * @param loggers {ReturnType<typeof import("./log.js").make_loggers>}
- * @returns {Promise<{ bin: string, version: string }>}
+ * @returns {Promise<{ nu_bin: string, nu_version: string, numake_version: string }>}
  */
 export async function install({ info }) {
   const package_dir = url.fileURLToPath(new URL("..", import.meta.url))
   const package_meta = JSON.parse(await fs.promises.readFile(path.join(package_dir, "package.json"), "utf8"))
-  const [nu_version, numake_release] = package_meta["version"].split("-")
+  const [nu_version, numake_version] = package_meta["version"].split("-")
   info(`nushell version: ${nu_version}`)
-  info(`numake release: ${numake_release}`)
+  info(`numake version: ${numake_version}`)
 
   const data_dir = XDG_DATA_HOME ? path.join(XDG_DATA_HOME, "numake") : path.join(package_dir, ".cache")
   info(`data directory: ${data_dir}`)
@@ -61,8 +61,9 @@ export async function install({ info }) {
   }
 
   return {
-    bin: nu_bin,
-    version: nu_version,
+    nu_bin,
+    nu_version,
+    numake_version,
   }
 }
 

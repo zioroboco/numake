@@ -18,7 +18,7 @@ const MAKEFILE_NAME = "make.nu"
 async function main() {
   info(`--- numake ---`)
 
-  const nushell = await install(log)
+  const { nu_bin, nu_version, numake_version } = await install(log)
 
   const project_path = findup_or_else(MAKEFILE_NAME)
   const makefile_path = path.join(project_path, MAKEFILE_NAME)
@@ -28,8 +28,42 @@ async function main() {
   const cmd = [first, ...rest].join(" ")
   info(`running command: ${cmd}`)
 
-  child_process.execSync(`${nushell.bin} --env-config=${makefile_path} -c "${cmd}"`, { cwd: project_path, stdio: "inherit" })
+  if (first === "--version" || first === "-v") {
+    process.stdout.write(`${nu_version}-${numake_version}`)
+    return
+  }
+
+  if (first === "--list" || first === "-l") {
+    process.stdout.write("commands:\n")
+    child_process.execSync(`${nu_bin} --env-config=${makefile_path} -c '${nu_list}'`, { cwd: project_path, stdio: "inherit" })
+    process.stdout.write(`${colour.grey}help: <command> --help${colour.reset}`)
+    return
+  }
+
+  child_process.execSync(`${nu_bin} --env-config=${makefile_path} -c '${cmd}'`, { cwd: project_path, stdio: "inherit" })
 }
+
+const colour = {
+  reset: "\x1b[0m",
+  grey: "\x1b[90m",
+}
+
+const nu_list = `
+  help commands
+    | where command_type == custom
+    | each {
+      |row| {
+        name: $row.name,
+        usage: (
+          if $row.usage != "" {
+            [" # ", ($row.usage | str replace "\n.*" "")] | str collect
+          }
+        )
+      }
+    }
+    | format $"    {name}${colour.grey}{usage}${colour.reset}"
+    | to text
+`
 
 /**
  * @param target {string}
